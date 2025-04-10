@@ -7,6 +7,8 @@ import requests
 from io import BytesIO
 import re
 from bs4 import BeautifulSoup
+import sys
+import traceback
 
 # Set page config
 st.set_page_config(
@@ -15,30 +17,47 @@ st.set_page_config(
     layout="wide"
 )
 
+# At the very top of your Streamlit.py, after the imports:
+st.set_option('future.global.showErrorDetails', True)
+
+# Add at the start of your app
+st.write(f"Python version: {sys.version}")
+st.write(f"Streamlit version: {st.__version__}")
+
 # Load models
-@st.cache_data
+@st.cache_data(max_entries=10)
 def load_models():
-    with open('models/dictionary.pkl', 'rb') as f1:
-        dictionary = pickle.load(f1)
-    with open('models/tfidf_model.pkl', 'rb') as f2:
-        tfidf = pickle.load(f2)
-    with open('models/lsi_model.pkl', 'rb') as f3:
-        lsi_model = pickle.load(f3)
-    with open('models/similarity_index.pkl', 'rb') as f4:
-        similarity_index = pickle.load(f4)
-    with open('surprise_svd_model.pkl', 'rb') as f5:
-        surprise = pickle.load(f5)
-    return dictionary, tfidf, lsi_model, similarity_index, surprise
+    try:
+        with open('models/dictionary.pkl', 'rb') as f1:
+            dictionary = pickle.load(f1)
+        with open('models/tfidf_model.pkl', 'rb') as f2:
+            tfidf = pickle.load(f2)
+        with open('models/lsi_model.pkl', 'rb') as f3:
+            lsi_model = pickle.load(f3)
+        with open('models/similarity_index.pkl', 'rb') as f4:
+            similarity_index = pickle.load(f4)
+        with open('models/surprise_svd_model.pkl', 'rb') as f5:
+            surprise = pickle.load(f5)
+        return dictionary, tfidf, lsi_model, similarity_index, surprise
+    except Exception as e:
+        st.error(f"Error loading models: {str(e)}")
+        st.error("Please check if all model files exist in the models/ directory")
+        raise e
 
 # Load data
-@st.cache_data
+@st.cache_data(max_entries=10)
 def load_data():
-    with open('data/processed_data.pkl', 'rb') as f:
-        data = pickle.load(f)
-    return data['df']
+    try:
+        with open('data/processed_data.pkl', 'rb') as f:
+            data = pickle.load(f)
+        return data['df']
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        st.error("Please check if processed_data.pkl exists in the data/ directory")
+        raise e
 
 def load_user_rating_data():
-    with open('user_rating_df.pkl', 'rb') as f:
+    with open('data/user_rating_df.pkl', 'rb') as f:
         data = pickle.load(f)
     return data
 
@@ -246,24 +265,30 @@ def show_recommendations():
                 display_recommendation(row, df, search_type)
 
 def main():
-    # Add navigation in sidebar
-    st.sidebar.title("Navigation")
-    
-    # Create buttons for navigation
-    if st.sidebar.button("🏠 Home"):
-        st.session_state.page = "Home"
-    if st.sidebar.button("🔍 Product Recommendations"):
-        st.session_state.page = "Product Recommendations"
-    
-    # Initialize session state if not exists
-    if 'page' not in st.session_state:
-        st.session_state.page = "Home"
-    
-    # Show the selected page
-    if st.session_state.page == "Home":
-        show_homepage()
-    else:
-        show_recommendations()
+    try:
+        # Add navigation in sidebar
+        st.sidebar.title("Navigation")
+        
+        # Create buttons for navigation
+        if st.sidebar.button("🏠 Home"):
+            st.session_state.page = "Home"
+        if st.sidebar.button("🔍 Product Recommendations"):
+            st.session_state.page = "Product Recommendations"
+        
+        # Initialize session state if not exists
+        if 'page' not in st.session_state:
+            st.session_state.page = "Home"
+        
+        # Show the selected page
+        if st.session_state.page == "Home":
+            show_homepage()
+        else:
+            show_recommendations()
+            
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        st.error("Traceback:")
+        st.code(traceback.format_exc())
 
 if __name__ == "__main__":
     main()
