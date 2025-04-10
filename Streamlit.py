@@ -17,8 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# At the very top of your Streamlit.py, after the imports:
-st.set_option('future.global.showErrorDetails', True)
+
 
 # Add at the start of your app
 st.write(f"Python version: {sys.version}")
@@ -215,7 +214,7 @@ def show_recommendations():
             user_id = st.text_input("Enter your user id (number):")
             try:
                 # Check for all zeros first
-                if user_id.strip('0') == '':
+                if user_id and user_id.strip('0') == '':
                     st.error("Invalid user ID - cannot be all zeros")
                     return
                 user_id = int(user_id)
