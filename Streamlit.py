@@ -157,7 +157,7 @@ def display_recommendation(row, df, search_type):
                 st.write(f"**Rating:** {row['rating']}")
             st.write(f"**Price:** {product_details['price']}")
             st.write(f"**Description:** {product_details['description']}")
-            st.write(f"**Link:** {product_details['link']}")
+            # st.write(f"**Link:** {product_details['link']}")
             
             # Create a clickable link that looks like a button
             st.markdown(f'<a href="{product_details["link"]}" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; background-color: #FF4B4B; color: white; text-decoration: none; border-radius: 0.25rem;">View Product</a>', unsafe_allow_html=True)
