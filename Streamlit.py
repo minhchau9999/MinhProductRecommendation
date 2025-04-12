@@ -14,15 +14,27 @@ import os
 # Set page config
 st.set_page_config(
     page_title="Product Recommendation",
-    page_icon="📊",
-    layout="wide"
+    page_icon="��",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-
+# Make the sidebar wider with custom CSS
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"][aria-expanded="true"]{
+            min-width: 300px;
+            max-width: 300px;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Add at the start of your app
-st.write(f"Python version: {sys.version}")
-st.write(f"Streamlit version: {st.__version__}")
+# st.write(f"Python version: {sys.version}")
+# st.write(f"Streamlit version: {st.__version__}")
 
 # Load models
 @st.cache_resource
@@ -48,7 +60,7 @@ def load_models():
 @st.cache_data(ttl="1h", show_spinner="Loading data...")
 def load_data():
     try:
-        st.write(f"Current working directory: {os.getcwd()}")
+        # st.write(f"Current working directory: {os.getcwd()}")
         with open('data/processed_data.pkl', 'rb') as f:
             data = pickle.load(f)
         return data['df']
@@ -157,14 +169,28 @@ def show_homepage():
     
     - Find similar products based on your selection
     - Search products using text queries
+    - See list of recommended products based on user rating
     - View detailed product information and images
     
     Use the sidebar to navigate to the Product Recommendation System.
     """)
+    st.subheader("Technical Description")
+    st.markdown("""
+    - The application uses a combination of content-based filtering and collaborative filtering to generate recommendations.
+    - The content-based filtering is based on the product description.
+    - The collaborative filtering is based on the user rating.
+    - The application uses the following models:
+        - Gensim for content-based filtering
+        - Surprise for collaborative filtering
+        - LSI for dimensionality reduction
+        - TF-IDF for text search
+        - Dictionary for mapping products to their corresponding IDs
+    """)
+
 
 def show_recommendations():
     st.title("🛍️ Product Recommendation System")
-    st.markdown("Find similar products based on your selection or search query or on the basis of user rating")
+    # st.markdown("Find similar products based on your selection or search query or on the basis of user rating")
     
     # Load models and data
     dictionary, tfidf, lsi_model, similarity_index, surprise = load_models()
@@ -201,6 +227,9 @@ def show_recommendations():
             st.write(f"Category: {selected_product['sub_category']}")
             if 'rating' in selected_product:
                 st.write(f"Rating: {selected_product['rating']}")
+            st.write(f"Price: {selected_product['price']}")
+            #button to view product
+            st.markdown(f'<a href="{selected_product["link"]}" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; background-color: #FF4B4B; color: white; text-decoration: none; border-radius: 0.25rem;">View Product</a>', unsafe_allow_html=True)
             
             # Get recommendations automatically
             recommendations = get_recommendations_gensim(
@@ -269,6 +298,17 @@ def show_recommendations():
 def main():
     try:
         # Add navigation in sidebar
+        st.markdown(
+        """
+        <style>
+            [data-testid="stSidebar"][aria-expanded="true"]{
+                min-width: 300px;
+                max-width: 300px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
         st.sidebar.title("Navigation")
         
         # Create buttons for navigation
@@ -286,7 +326,17 @@ def main():
             show_homepage()
         else:
             show_recommendations()
-            
+        
+            # Add empty space to push footer to bottom
+        st.sidebar.markdown("<br>" * 13, unsafe_allow_html=True)
+
+        # Footer for author and source code
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("Streamlit UI made with ☕︎ by [Minh] and Cursor-AI")
+        st.sidebar.markdown("Source code: [GitHub](https://github.com/minhchau9999/MinhProductRecommendation.git)")
+        st.sidebar.markdown("Gensim and Surprise models by Minh + Duy")
+        st.sidebar.markdown("---")
+
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         st.error("Traceback:")
