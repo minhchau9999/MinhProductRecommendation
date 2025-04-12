@@ -9,6 +9,7 @@ import re
 from bs4 import BeautifulSoup
 import sys
 import traceback
+import os
 
 # Set page config
 st.set_page_config(
@@ -24,7 +25,7 @@ st.write(f"Python version: {sys.version}")
 st.write(f"Streamlit version: {st.__version__}")
 
 # Load models
-@st.cache_data(max_entries=10)
+@st.cache_resource
 def load_models():
     try:
         with open('models/dictionary.pkl', 'rb') as f1:
@@ -44,21 +45,23 @@ def load_models():
         raise e
 
 # Load data
-@st.cache_data(max_entries=10)
+@st.cache_data(ttl="1h", show_spinner="Loading data...")
 def load_data():
     try:
+        st.write(f"Current working directory: {os.getcwd()}")
         with open('data/processed_data.pkl', 'rb') as f:
             data = pickle.load(f)
         return data['df']
     except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
+        st.error(f"Detailed error: {str(e)}")
+        st.error(f"Error type: {type(e)}")
         st.error("Please check if processed_data.pkl exists in the data/ directory")
         raise e
 
-def load_user_rating_data():
-    with open('data/user_rating_df.pkl', 'rb') as f:
-        data = pickle.load(f)
-    return data
+# def load_user_rating_data():
+#     with open('data/user_rating_df.pkl', 'rb') as f:
+#         data = pickle.load(f)
+#     return data
 
 @st.cache_data
 def load_sample_products():
@@ -166,7 +169,7 @@ def show_recommendations():
     # Load models and data
     dictionary, tfidf, lsi_model, similarity_index, surprise = load_models()
     df = load_data()
-    user_rating_df = load_user_rating_data()
+    # user_rating_df = load_user_rating_data()
     sample_products = load_sample_products()
     
     # Create two columns for layout
@@ -211,7 +214,7 @@ def show_recommendations():
             )
         elif search_type == "User Rating":
             # User rating
-            user_id = st.text_input("Enter your user id (number):")
+            user_id = st.text_input("Enter your user id (number in range 0-650636):")
             try:
                 # Check for all zeros first
                 if user_id and user_id.strip('0') == '':
@@ -222,7 +225,7 @@ def show_recommendations():
                 st.error("Please enter a valid numeric user ID")
                 return
             if user_id:
-                if user_id not in user_rating_df['user_id'].values:
+                if user_id not in range(0,650636):
                     st.error("User ID not found in the dataset")
                 else:
                     recommendations = get_recommendations_surprise(
